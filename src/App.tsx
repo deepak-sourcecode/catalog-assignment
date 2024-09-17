@@ -1,5 +1,7 @@
+import { Button } from "@chakra-ui/react";
+
 function App() {
-  return <h1 className="text-green-500 font-serif border-l">Hello</h1>;
+  return <Button>Hello</Button>;
 }
 
 export default App;
