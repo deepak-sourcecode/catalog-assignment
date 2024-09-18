@@ -5,15 +5,8 @@
 /* custom fonts */
 @font-face {
   font-family: 'Circular Std';
-  src: url("../src/assets/fonts/CircularStd-Medium.ttf") format("truetype");
+  src: url('../src/assets/fonts/CircularStd-Thin.ttf') format('truetype');
   font-weight: 400;
-  font-style: normal;
-}
-
-@font-face {
-  font-family: 'Circular Std';
-  src: url("../src/assets/fonts/CircularStd-Bold.ttf") format("truetype");
-  font-weight: 500;
   font-style: normal;
 }
 
@@ -26,7 +19,7 @@
 
 body {
   height: 100vh;
-  font-family: "Circular Std";
+  font-family: 'Circular Std';
 }
 
 #root {
