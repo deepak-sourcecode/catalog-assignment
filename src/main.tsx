@@ -1,10 +1,12 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
+import { Provider } from 'react-redux';
 import { createBrowserRouter, RouterProvider } from 'react-router-dom';
 
 import { ChakraProvider, extendTheme } from '@chakra-ui/react';
 
 import Dashboard from './routes/Dashboard/index.tsx';
+import { store } from './store';
 
 import './index.css';
 
@@ -27,10 +29,12 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
-    <ChakraProvider theme={theme}>
-      <main className="h-screen w-screen">
-        <RouterProvider router={router} />
-      </main>
-    </ChakraProvider>
+    <Provider store={store}>
+      <ChakraProvider theme={theme}>
+        <main className="h-screen w-screen">
+          <RouterProvider router={router} />
+        </main>
+      </ChakraProvider>
+    </Provider>
   </StrictMode>,
 );
