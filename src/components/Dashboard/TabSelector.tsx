@@ -7,7 +7,7 @@ import { twclsx } from '../../utils';
 
 const TabSelector: FunctionComponent = () => {
   return (
-    <Tabs className="flex min-h-0 flex-grow flex-col">
+    <Tabs defaultIndex={1} className="flex min-h-0 flex-grow flex-col">
       <TabList color="#6F7177" className={twclsx('flex flex-wrap px-1', 'md:px-0 md:ps-11')}>
         {DASHBOARD_TABS?.map(({ label, key }) => (
           <Tab

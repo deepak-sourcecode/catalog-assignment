@@ -1,148 +1,98 @@
-import { createChart } from 'lightweight-charts';
-import { FunctionComponent, useEffect, useRef } from 'react';
+import { createChart, IChartApi } from 'lightweight-charts';
+import { FunctionComponent, useEffect, useRef, useState } from 'react';
 
+import { CloseIcon } from '@chakra-ui/icons';
+import { IconButton, Spinner } from '@chakra-ui/react';
+
+import { DASHBOARD_CHART_CONFIG, TRANSPARENT_RGBA_VALUE } from '../../constants';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { useGetCoinMarketDataByTimeRangeQuery } from '../../services/dashboardApi';
+import {
+  selectActiveCoinId,
+  selectIsChartFullscreen,
+  selectStaticTimePeriodFilterOption,
+  setIsChartFullscreen,
+} from '../../slices/dashboardSlice';
 import { twclsx } from '../../utils';
 
 const Chart: FunctionComponent = () => {
+  const dispatch = useAppDispatch();
+  const activeCoinId = useAppSelector(selectActiveCoinId);
+  const isChartFullscreen = useAppSelector(selectIsChartFullscreen);
+  const { duration, unit } = useAppSelector(selectStaticTimePeriodFilterOption);
+  const { data, isFetching } = useGetCoinMarketDataByTimeRangeQuery(
+    {
+      id: activeCoinId,
+      vs_currency: 'usd',
+      duration,
+      unit,
+    },
+    { skip: !activeCoinId || !duration || !unit },
+  );
+
   const chartContainerRef = useRef<HTMLDivElement | null>(null);
+  const chartApiRef = useRef<IChartApi | null>(null);
 
-  const seriesData = [
-    { time: '2018-10-19', value: 54.9 },
-    { time: '2018-10-22', value: 54.98 },
-    { time: '2018-10-23', value: 57.21 },
-    { time: '2018-10-24', value: 57.42 },
-    { time: '2018-10-25', value: 56.43 },
-    { time: '2018-10-26', value: 55.51 },
-    { time: '2018-10-29', value: 56.48 },
-    { time: '2018-10-30', value: 58.18 },
-    { time: '2018-10-31', value: 57.09 },
-    { time: '2018-11-01', value: 56.05 },
-    { time: '2018-11-02', value: 56.63 },
-    { time: '2018-11-05', value: 57.21 },
-    { time: '2018-11-06', value: 57.21 },
-    { time: '2018-11-07', value: 57.65 },
-    { time: '2018-11-08', value: 58.27 },
-    { time: '2018-11-09', value: 58.46 },
-    { time: '2018-11-12', value: 58.72 },
-    { time: '2018-11-13', value: 58.66 },
-    { time: '2018-11-14', value: 58.94 },
-    { time: '2018-11-15', value: 59.08 },
-    { time: '2018-11-16', value: 60.21 },
-    { time: '2018-11-19', value: 60.62 },
-    { time: '2018-11-20', value: 59.46 },
-    { time: '2018-11-21', value: 59.16 },
-    { time: '2018-11-23', value: 58.64 },
-    { time: '2018-11-26', value: 59.17 },
-    { time: '2018-11-27', value: 60.65 },
-    { time: '2018-11-28', value: 60.06 },
-    { time: '2018-11-29', value: 59.45 },
-    { time: '2018-11-30', value: 60.3 },
-    { time: '2018-12-03', value: 58.16 },
-    { time: '2018-12-04', value: 58.09 },
-    { time: '2018-12-06', value: 58.08 },
-    { time: '2018-12-07', value: 57.68 },
-    { time: '2018-12-10', value: 58.27 },
-    { time: '2018-12-11', value: 58.85 },
-  ];
-
-  const volumeData = [
-    { time: '2018-10-19', value: 19103293.0 },
-    { time: '2018-10-22', value: 21737523.0 },
-    { time: '2018-10-23', value: 29328713.0 },
-    { time: '2018-10-24', value: 37435638.0 },
-    { time: '2018-10-25', value: 25269995.0 },
-    { time: '2018-10-26', value: 24973311.0 },
-    { time: '2018-10-29', value: 22103692.0 },
-    { time: '2018-10-30', value: 25231199.0 },
-    { time: '2018-10-31', value: 24214427.0 },
-    { time: '2018-11-01', value: 22533201.0 },
-    { time: '2018-11-02', value: 14734412.0 },
-    { time: '2018-11-05', value: 12733842.0 },
-    { time: '2018-11-06', value: 12371207.0 },
-    { time: '2018-11-07', value: 14891287.0 },
-    { time: '2018-11-08', value: 12482392.0 },
-    { time: '2018-11-09', value: 17365762.0 },
-    { time: '2018-11-12', value: 13236769.0 },
-    { time: '2018-11-13', value: 13047907.0 },
-    { time: '2018-11-14', value: 18288710.0 },
-    { time: '2018-11-15', value: 17147123.0 },
-    { time: '2018-11-16', value: 19470986.0 },
-    { time: '2018-11-19', value: 18405731.0 },
-    { time: '2018-11-20', value: 22028957.0 },
-    { time: '2018-11-21', value: 18482233.0 },
-    { time: '2018-11-23', value: 7009050.0 },
-    { time: '2018-11-26', value: 12308876.0 },
-    { time: '2018-11-27', value: 14118867.0 },
-    { time: '2018-11-28', value: 18662989.0 },
-    { time: '2018-11-29', value: 14763658.0 },
-    { time: '2018-11-30', value: 31142818.0 },
-  ];
+  const [lineSeriesData, setLineSeriesData] = useState<any[]>([]);
+  const [histogramSeriesData, setHistogramSeriesData] = useState<any[]>([]);
 
   useEffect(() => {
-    if (chartContainerRef.current !== null) {
-      const chart = createChart(chartContainerRef.current, {
-        autoSize: true,
-        timeScale: {
-          tickMarkFormatter: () => '',
-          visible: true,
-          borderVisible: true,
-          borderColor: 'lightgray',
-          ticksVisible: false,
-          allowBoldLabels: false,
-        },
-        layout: {
-          textColor: 'black',
-          background: { color: 'white' },
-          fontFamily: 'Circular Std',
-          attributionLogo: false,
-          fontSize: 18,
-        },
-        rightPriceScale: {
-          borderVisible: true,
-          ticksVisible: false,
-          borderColor: 'lightgray',
-          textColor: 'transparent',
-        },
-        leftPriceScale: {
-          borderVisible: true,
-          ticksVisible: false,
-          borderColor: 'lightgray',
-          textColor: 'transparent',
-          visible: true,
-        },
-        overlayPriceScales: {},
-        grid: {
-          horzLines: {
-            visible: false,
-          },
-        },
-        crosshair: {
-          vertLine: {
-            labelVisible: false,
-          },
-          horzLine: {
-            labelBackgroundColor: '#1A243A',
-          },
-        },
-      });
+    return () => {
+      if (chartApiRef.current) {
+        chartApiRef.current.remove();
+        chartApiRef.current = null;
+      }
+    };
+  }, []);
 
-      chart.timeScale().fitContent();
+  useEffect(() => {
+    if (chartContainerRef.current) {
+      chartApiRef?.current?.remove();
+      chartApiRef.current = createChart(chartContainerRef.current, DASHBOARD_CHART_CONFIG);
+    }
 
-      const newSeries = chart.addBaselineSeries({
+    if (data?.prices?.length) {
+      const transformedLineSeriesData: any[] = data?.prices?.map((price) => ({
+        time: price?.[0],
+        value: price?.[1],
+      }));
+
+      setLineSeriesData(transformedLineSeriesData);
+    }
+
+    if (data?.total_volumes?.length) {
+      const transformedHistogramSeriesData: any[] = data?.total_volumes?.map((volume) => ({
+        time: volume?.[0],
+        value: volume?.[1],
+      }));
+
+      setHistogramSeriesData(transformedHistogramSeriesData);
+    }
+  }, [data]);
+
+  useEffect(() => {
+    if (chartApiRef.current) {
+      const series = chartApiRef.current.addBaselineSeries({
         lineWidth: 2,
         priceLineVisible: false,
         crosshairMarkerVisible: false,
         topLineColor: '#4B40EE',
         topFillColor1: 'rgba(75, 64, 238, 0.2)',
-        topFillColor2: 'rgba(255, 255, 255, 0)',
-        bottomLineColor: 'rgba(255, 255, 255, 0)',
-        bottomFillColor1: 'rgba(255, 255, 255, 0)',
-        bottomFillColor2: 'rgba(255, 255, 255, 0)',
+        topFillColor2: TRANSPARENT_RGBA_VALUE,
+        bottomLineColor: TRANSPARENT_RGBA_VALUE,
+        bottomFillColor1: TRANSPARENT_RGBA_VALUE,
+        bottomFillColor2: TRANSPARENT_RGBA_VALUE,
       });
 
-      newSeries.setData(seriesData);
+      series.setData(lineSeriesData);
 
-      const volumeSeries = chart.addHistogramSeries({
+      chartApiRef.current.timeScale().fitContent();
+    }
+  }, [lineSeriesData]);
+
+  useEffect(() => {
+    if (chartApiRef.current) {
+      const series = chartApiRef.current.addHistogramSeries({
         priceFormat: {
           type: 'volume',
         },
@@ -152,22 +102,51 @@ const Chart: FunctionComponent = () => {
         lastValueVisible: false,
       });
 
-      volumeSeries.priceScale().applyOptions({
+      series.priceScale().applyOptions({
         scaleMargins: {
-          top: 0.92,
+          top: 0.95,
           bottom: 0,
         },
       });
 
-      volumeSeries.setData(volumeData);
+      series.setData(histogramSeriesData);
 
-      return () => {
-        chart.remove();
-      };
+      chartApiRef.current.timeScale().fitContent();
     }
-  }, []);
+  }, [histogramSeriesData]);
 
-  return <div className={twclsx('min-h-0 flex-grow', 'md:pe-1')} ref={chartContainerRef} />;
+  if (isFetching) {
+    // REF: custom solution for removing the chart, can be optimized in a better way later
+    if (chartContainerRef && chartContainerRef.current) {
+      const innerChartDiv = chartContainerRef.current.querySelector('div');
+      if (innerChartDiv) innerChartDiv.style.display = 'none';
+    }
+
+    return (
+      <div className={twclsx('flex min-h-0 w-full flex-grow items-center justify-center px-4', 'md:px-[60px]')}>
+        <Spinner size="xl" className="text-dark-1" />
+      </div>
+    );
+  }
+
+  return (
+    <div
+      className={twclsx(
+        'relative min-h-0 flex-grow',
+        'md:pe-1',
+        `${isChartFullscreen && 'fixed left-0 top-0 h-screen w-screen bg-white p-10'}`,
+      )}
+      ref={chartContainerRef}
+    >
+      <IconButton
+        onClick={() => dispatch(setIsChartFullscreen(false))}
+        className={twclsx('absolute right-4 top-2 z-10', `${!isChartFullscreen && 'hidden'}`)}
+        aria-label="Exit Fullscreen"
+        size="sm"
+        icon={<CloseIcon />}
+      />
+    </div>
+  );
 };
 
 export default Chart;
