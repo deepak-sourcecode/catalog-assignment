@@ -1,11 +1,11 @@
 import { combineReducers } from '@reduxjs/toolkit';
 
-import { pokemonApi } from '../services/pokemonApi';
-import counterReducer from '../slices/counterSlice';
+import { dashboardApi } from '../services/dashboardApi';
+import dashboardReducer from '../slices/dashboardSlice';
 
 const rootReducer = combineReducers({
-  counter: counterReducer,
-  [pokemonApi.reducerPath]: pokemonApi.reducer,
+  dashboard: dashboardReducer,
+  [dashboardApi.reducerPath]: dashboardApi.reducer,
 });
 
 export default rootReducer;
