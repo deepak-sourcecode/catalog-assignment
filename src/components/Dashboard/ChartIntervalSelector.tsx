@@ -2,6 +2,9 @@ import { FunctionComponent } from 'react';
 
 import { Box, HStack, useRadio, useRadioGroup } from '@chakra-ui/react';
 
+import { DASHBOARD_STATIC_TIME_PERIOD_FILTER_OPTIONS } from '../../constants';
+import { useAppDispatch, useAppSelector } from '../../hooks';
+import { selectStaticTimePeriodFilterOption, setStaticTimePeriodFilterOption } from '../../slices/dashboardSlice';
 import { twclsx } from '../../utils';
 
 const CustomRadioCard = (props: any) => {
@@ -36,22 +39,31 @@ const CustomRadioCard = (props: any) => {
 };
 
 const ChartIntervalSelector: FunctionComponent = () => {
-  const options = ['1d', '3d', '1w', '1m', '6m', '1y', 'max'];
+  const dispatch = useAppDispatch();
+  const staticTimePeriodFilterOption = useAppSelector(selectStaticTimePeriodFilterOption);
+
+  const handleChange = (selectedValue: string) => {
+    const selectedOption = DASHBOARD_STATIC_TIME_PERIOD_FILTER_OPTIONS.find((option) => option.value === selectedValue);
+
+    if (selectedOption) dispatch(setStaticTimePeriodFilterOption(selectedOption));
+  };
 
   const { getRootProps, getRadioProps } = useRadioGroup({
     name: 'dashboard-chart-time-frame',
-    defaultValue: '1w',
+    onChange: handleChange,
+    value: staticTimePeriodFilterOption?.value,
   });
 
   const group = getRootProps();
 
   return (
     <HStack {...group} className={twclsx('flex flex-wrap justify-between gap-0', 'sm:flex-nowrap', 'md:gap-1.5')}>
-      {options.map((value) => {
+      {DASHBOARD_STATIC_TIME_PERIOD_FILTER_OPTIONS.map(({ value, label }) => {
         const radio = getRadioProps({ value });
+
         return (
           <CustomRadioCard key={value} {...radio}>
-            {value}
+            {label}
           </CustomRadioCard>
         );
       })}
